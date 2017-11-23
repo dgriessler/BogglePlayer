@@ -12,41 +12,46 @@ Description of the overall algorithm and key data structures:
 */
 
 
-public class TreeNode<E> implements Comparable<E> {
-	private E element;
-	private TreeNode<E> parent;
-	private LinkedList<TreeNode<E>> children;
+public class TreeNode<E> implements Comparable<TreeNode<E>> {
+	private E _element;
+	private TreeNode<E> _parent;
+	private LinkedList<TreeNode<E>> _children;
+	private Position _position;
 
 	// Creates a new node
-	public TreeNode(E e, TreeNode<E> p) {
-		this.element = e;
-		this.parent = p;
-		children = new LinkedList<TreeNode<E>>();
+	public TreeNode(E element, TreeNode<E> parent, Position position) {
+		this._element = element;
+		this._parent = parent;
+		_children = new LinkedList<TreeNode<E>>();
+		this._position = position;
 	}
 
 	// Gets the node's element
 	public E getElement() {
-		return this.element;
+		return this._element;
+	}
+	public Position getPosition() {
+		return this._position;
 	}
 	
 	// Gets the node's parent
 	public TreeNode<E> getParent() {
-		return this.parent;
+		return this._parent;
 	}
 	
 	// Gets the node's children
 	public LinkedList<TreeNode<E>> getChildren() {
-		return this.children;
+		return this._children;
 	}
 
 	// Compare two node's for lexicographical ordering
 	@Override
-	public int compareTo(Object o) {
-		return this.toString().compareTo(o.toString()); // Converts element to a string for comparison -> may not work on elements that are not a string
+	public int compareTo(TreeNode<E> o) {
+		return this.getPosition().compareTo(o.getPosition());
 	}
 	
 	@Override
 	public String toString() {
-		return this.element.toString();
+		return this._element.toString();
 	}
 }

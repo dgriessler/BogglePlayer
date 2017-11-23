@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.Scanner;
 
 /*
@@ -32,15 +33,23 @@ public class BogglePlayer {
 	 */
 	public Word[] getWords(char[][] board) {
 		Word[] myWords = new Word[20]; // Words created from the Boggle board
-		// Loops through each character in the board
+		// Loops through each character in the board and prints it out
 		for (int row = 0; row < board.length; row ++) {
 			for (int col = 0; col < board[row].length; col ++) {
-				System.out.print(board[row][col] + " "); // Prints each character in the board
-				POSSIBLE_WORDS.setRoot('0'); // Sets the root of the tree as the current character in the board
-				POSSIBLE_WORDS.addChild(POSSIBLE_WORDS.getRoot(), POSSIBLE_WORDS.createNode(board[row][col], POSSIBLE_WORDS.getRoot()));
-				getAdjacent(board, row, col, POSSIBLE_WORDS.getRoot()); // Gets all adjacent characters
+				System.out.print(board[row][col] + " ");
 			}
 			System.out.println();
+		}
+		// Loops through each character in the board and creates all possible paths
+		for (int row = 0; row < board.length; row ++) {
+			for (int col = 0; col < board[row].length; col ++) {
+				POSSIBLE_WORDS.setRoot('0', new Position(-1, -1)); // Sets the root of the tree as the current character in the board
+				Position position = new Position(row, col);
+				TreeNode<Character> newNode = new TreeNode<Character>(board[row][col], POSSIBLE_WORDS.getRoot(), position);
+				POSSIBLE_WORDS.addChild(POSSIBLE_WORDS.getRoot(), newNode);
+				getAdjacent(board, row, col, POSSIBLE_WORDS.getRoot()); // Gets all adjacent characters
+				return null; // Stops after first character for testing purposed
+			}
 		}
 		return myWords;
 	}
@@ -51,45 +60,64 @@ public class BogglePlayer {
 	 * Recursive calls get every path from the root
 	 */
 	public void getAdjacent (char[][] board, int parentRow, int parentCol, TreeNode<Character> parentNode) {
-		for (TreeNode<Character> childNode: parentNode.getChildren()) { // ConcurrentModificationError thrown
-			getAbove(board, parentRow, parentCol, childNode);
-			getBelow(board, parentRow, parentCol, childNode);
-			getNext(board, parentRow, parentCol, childNode);
-			getPrev(board, parentRow, parentCol, childNode);
-			getAbovePrev(board, parentRow, parentCol, childNode);
-			getAboveNext(board, parentRow, parentCol, childNode);
-			getBelowPrev(board, parentRow, parentCol, childNode);
-			getBelowNext(board, parentRow, parentCol, childNode);
-			System.out.println(parentNode.getChildren());
-			getAdjacent(board, parentRow, parentCol, childNode); // Recursive call
+		for (TreeNode<Character> childNode: parentNode.getChildren()) {
+			Position childPosition = childNode.getPosition();
+			getAbove(board, childPosition.getRow(), childPosition.getCol(), childNode);
+			getBelow(board, childPosition.getRow(), childPosition.getCol(), childNode);
+			getNext(board, childPosition.getRow(), childPosition.getCol(), childNode);
+			getPrev(board, childPosition.getRow(), childPosition.getCol(), childNode);
+			getAbovePrev(board, childPosition.getRow(), childPosition.getCol(), childNode);
+			getAboveNext(board, childPosition.getRow(), childPosition.getCol(), childNode);
+			getBelowPrev(board, childPosition.getRow(), childPosition.getCol(), childNode);
+			getBelowNext(board, childPosition.getRow(), childPosition.getCol(), childNode);
+			System.out.println(childNode.getChildren());
+			getAdjacent(board, childPosition.getRow(), childPosition.getCol(), childNode); // Recursive call
 		}
 	}
 	
 	public void getAbove(char[][] board, int parentRow, int parentCol, TreeNode<Character> parentNode) {
 		int childRow = parentRow - 1;
 		if (childRow > -1) {
-			POSSIBLE_WORDS.addChild(parentNode, new TreeNode<Character>((Character) board[childRow][parentCol], parentNode));
+			Position position = new Position(childRow, parentCol);
+			TreeNode<Character> newNode = new TreeNode<Character>((Character) board[childRow][parentCol], parentNode, position);
+			if (!newNode.getPosition().equals(parentNode.getParent().getPosition())) {
+				POSSIBLE_WORDS.addChild(parentNode, newNode);
+			}
 		}
 	}
 
 	public void getNext(char[][] board, int parentRow, int parentCol, TreeNode<Character> parentNode) {
 		int childCol = parentCol + 1;
 		if (childCol < board[0].length) {
-			POSSIBLE_WORDS.addChild(parentNode, new TreeNode<Character>((Character) board[parentRow][childCol], parentNode));
+			Position position = new Position(parentRow, childCol);
+			TreeNode<Character> newNode = new TreeNode<Character>((Character) board[parentRow][childCol], parentNode, position);
+			if (!newNode.getPosition().equals(parentNode.getParent().getPosition())) {
+				POSSIBLE_WORDS.addChild(parentNode, newNode);
+			}
 		}
 	}
 	
 	public void getBelow(char[][] board, int parentRow, int parentCol, TreeNode<Character> parentNode) {
 		int childRow = parentRow + 1;
 		if (childRow < board.length) {
-			POSSIBLE_WORDS.addChild(parentNode, new TreeNode<Character>((Character) board[childRow][parentCol], parentNode));
+			Position position = new Position(childRow, parentCol);
+			TreeNode<Character> newNode = new TreeNode<Character>((Character) board[childRow][parentCol], parentNode, position);
+			if (!newNode.getPosition().equals(parentNode.getParent().getPosition())) {
+				POSSIBLE_WORDS.addChild(parentNode, newNode);
+			}
 		}
 	}
 
 	public void getPrev(char[][] board, int parentRow, int parentCol, TreeNode<Character> parentNode) {
 		int childCol = parentCol - 1;
 		if (childCol > -1) {
-			POSSIBLE_WORDS.addChild(parentNode, new TreeNode<Character>((Character) board[parentRow][childCol], parentNode));
+			Position position = new Position(parentRow, childCol);
+			TreeNode<Character> newNode = new TreeNode<Character>((Character) board[parentRow][childCol], parentNode, position);
+//			System.out.println(newNode.getPosition() + " " + parentNode.getParent().getPosition() + " " + parentNode.getParent().getElement());
+			if (!newNode.getPosition().equals(parentNode.getParent().getPosition())) {
+//				System.out.println("CALL");
+				POSSIBLE_WORDS.addChild(parentNode, newNode);
+			}
 		}
 	}
 	
@@ -97,7 +125,11 @@ public class BogglePlayer {
 		int childRow = parentRow - 1;
 		int childCol = parentCol - 1;
 		if (childRow > -1 && childCol > -1) {
-			POSSIBLE_WORDS.addChild(parentNode, new TreeNode<Character>((Character) board[childRow][childCol], parentNode));
+			Position position = new Position(childRow, childCol);
+			TreeNode<Character> newNode = new TreeNode<Character>((Character) board[childRow][childCol], parentNode, position);
+			if (!newNode.getPosition().equals(parentNode.getParent().getPosition())) {
+				POSSIBLE_WORDS.addChild(parentNode, newNode);
+			}
 		}
 	}
 
@@ -105,7 +137,11 @@ public class BogglePlayer {
 		int childRow = parentRow - 1;
 		int childCol = parentCol + 1;
 		if (childRow > -1 && childCol < board[0].length) {
-			POSSIBLE_WORDS.addChild(parentNode, new TreeNode<Character>((Character) board[childRow][childCol], parentNode));
+			Position position = new Position(childRow, childCol);
+			TreeNode<Character> newNode = new TreeNode<Character>((Character) board[childRow][childCol], parentNode, position);
+			if (!newNode.getPosition().equals(parentNode.getParent().getPosition())) {
+				POSSIBLE_WORDS.addChild(parentNode, newNode);
+			}
 		}
 	}
 	
@@ -113,7 +149,11 @@ public class BogglePlayer {
 		int childRow = parentRow + 1;
 		int childCol = parentCol - 1;
 		if (childRow < board.length && childCol > -1) {
-			POSSIBLE_WORDS.addChild(parentNode, new TreeNode<Character>((Character) board[childRow][childCol], parentNode));
+			Position position = new Position(childRow, childCol);
+			TreeNode<Character> newNode = new TreeNode<Character>((Character) board[childRow][childCol], parentNode, position);
+			if (!newNode.getPosition().equals(parentNode.getParent().getPosition())) {
+				POSSIBLE_WORDS.addChild(parentNode, newNode);
+			}
 		}
 	}
 
@@ -121,7 +161,11 @@ public class BogglePlayer {
 		int childRow = parentRow + 1;
 		int childCol = parentCol + 1;
 		if (childRow < board.length && childCol < board[0].length) {
-			POSSIBLE_WORDS.addChild(parentNode, new TreeNode<Character>((Character) board[childRow][childCol], parentNode));
+			Position position = new Position(childRow, childCol);
+			TreeNode<Character> newNode = new TreeNode<Character>((Character) board[childRow][childCol], parentNode, position);
+			if (!newNode.getPosition().equals(parentNode.getParent().getPosition())) {
+				POSSIBLE_WORDS.addChild(parentNode, newNode);
+			}
 		}
 	}
 }

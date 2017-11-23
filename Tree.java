@@ -48,12 +48,12 @@ public class Tree<E> {
 	}
 	
 	// Creates a new node
-	protected TreeNode<E> createNode(E e, TreeNode<E> p) {
-		return new TreeNode<E>(e, p);
+	protected TreeNode<E> createNode(E element, TreeNode<E> parent, Position position) {
+		return new TreeNode<E>(element, parent, position);
 	}
 	
 	private TreeNode<E> root; // Root node
-	private int size = 0; // Number of elements in tree
+	private int size; // Number of elements in tree
 	
 	// Gets the root node
 	public TreeNode<E> getRoot() {
@@ -61,16 +61,18 @@ public class Tree<E> {
 	}
 	
 	// Creates a new instance of the Tree data structure
-	public Tree(E e) {
-		root = new TreeNode<E>(e, null);
+	public Tree(E e, Position position) {
+		root = new TreeNode<E>(e, null, position);
+		size ++;
 	}
 	
 	public Tree() {
 		root = null;
 	}
 	
-	public TreeNode<E> setRoot(E e) {
-		this.root = new TreeNode<E>(e, null);
+	public TreeNode<E> setRoot(E e, Position position) {
+		this.root = new TreeNode<E>(e, null, position);
+		size ++;
 		return this.root;
 	}
 	
